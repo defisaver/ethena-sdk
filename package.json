@@ -1,0 +1,51 @@
+{
+  "name": "@defisaver/ethena-sdk",
+  "version": "0.0.1",
+  "description": "SDK for ethena lev create",
+  "main": "./cjs/index.js",
+  "module": "./esm/index.js",
+  "types": "./esm/index.d.ts",
+  "scripts": {
+    "build:esm": "rm -rf esm && tsc -p tsconfig.esm.json",
+    "build:cjs": "rm -rf cjs && tsc -p tsconfig.cjs.json",
+    "build": "npm run lint && npm run build:cjs && npm run build:esm",
+    "dev": "tsc -p tsconfig.json --watch",
+    "lint": "eslint src/ --fix",
+    "lint-check": "eslint src/",
+    "test": "mocha tests/*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/defisaver/ethena-sdk.git"
+  },
+  "author": "DeFi Saver",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/defisaver/ethena-sdk/issues"
+  },
+  "homepage": "https://github.com/defisaver/ethena-sdk#readme",
+  "dependencies": {
+    "@defisaver/tokens": "^1.7.22",
+    "@types/lodash": "^4.17.15",
+    "@types/memoizee": "^0.4.12",
+    "decimal.js": "^10.6.0",
+    "lodash": "^4.17.21",
+    "memoizee": "^0.4.17",
+    "viem": "^2.37.9"
+  },
+  "devDependencies": {
+    "@defisaver/eslint-config": "^1.0.1",
+    "@metamask/eth-json-rpc-middleware": "^15.0.1",
+    "@metamask/eth-json-rpc-provider": "^4.1.6",
+    "@types/chai": "^5.0.0",
+    "@types/mocha": "^10.0.9",
+    "chai": "^4.3.8",
+    "dotenv": "^16.3.1",
+    "eslint": "^8.49.0",
+    "eslint-plugin-import": "^2.31.0",
+    "mocha": "^10.2.0",
+    "nock": "^14.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.2.2"
+  }
+}
