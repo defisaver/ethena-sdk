@@ -1,10 +1,11 @@
 import Dec from 'decimal.js';
-import { getAssetInfo } from '@defisaver/tokens';
+import { assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
 import {
   helpers, markets, MMUsedAssets, morphoBlue, MorphoBlueVersions, NetworkNumber,
 } from '@defisaver/positions-sdk';
 import { AssetData, MarketData, PositionData } from '../types';
 import { getViemProvider } from '../services/viem';
+import { getBestPrice } from '../exchange';
 
 const getMaxBoostUsd = (lltv: string, borrowLimit: string, debt: string, targetRatio = 1.01, bufferPercent = 1) => new Dec(targetRatio).mul(debt).sub(borrowLimit)
   .div(new Dec(lltv).sub(targetRatio).toString())
@@ -38,24 +39,24 @@ export const getMorphoMaxLeverageForSupplyAmount = (marketData: MarketData, supp
   return maxLeverage;
 };
 
-export const getMorphoResultingPosition = async (marketData: MarketData, supplyAmount: string, leverage: number, rpcUrl: string, network: NetworkNumber): Promise<PositionData> => {
+export const getMorphoResultingPosition = async (marketData: MarketData, supplyAmount: string, leverage: number, userAddress: string, rpcUrl: string, network: NetworkNumber): Promise<PositionData> => {
   const provider = getViemProvider(rpcUrl, network);
 
   const morphoMarket = markets.MorphoBlueMarkets(network)[MorphoBlueVersions.MorphoBlueSUSDeUSDtb_915];
   const {
     rate: oracle, assetsData,
   } = marketData;
+  const supplyAsset: AssetData = Object.values(assetsData).find((asset) => !asset.isDebtAsset)!;
+  const borrowAsset: AssetData = Object.values(assetsData).find((asset) => asset.isDebtAsset)!;
   const debtAmount = new Dec(leverage)
     .times(supplyAmount).minus(supplyAmount).times(oracle)
     .toString();
 
-  // TODO: add price fetching logic
-  const priceForAmount = new Dec(1).div(oracle).toString();
-  const leveragedAmount = new Dec(debtAmount).times(priceForAmount);
-  const collIncrease = new Dec(supplyAmount).plus(leveragedAmount).toString();
+  const debtAmountWei = assetAmountInWei(debtAmount, borrowAsset.symbol);
+  const { priceWithFee, source } = await getBestPrice(borrowAsset.symbol, supplyAsset.symbol, debtAmountWei, userAddress, network);
 
-  const supplyAsset: AssetData = Object.values(assetsData).find((asset) => !asset.isDebtAsset)!;
-  const borrowAsset: AssetData = Object.values(assetsData).find((asset) => asset.isDebtAsset)!;
+  const leveragedAmount = new Dec(debtAmount).times(priceWithFee);
+  const collIncrease = new Dec(supplyAmount).plus(leveragedAmount).toString();
 
   const morphoMarketData = await morphoBlue._getMorphoBlueMarketData(provider, network, morphoMarket);
   const usedAssets: MMUsedAssets = {};
@@ -84,6 +85,14 @@ export const getMorphoResultingPosition = async (marketData: MarketData, supplyA
 
   const aggregatedPosition = helpers.morphoBlueHelpers.getMorphoBlueAggregatedPositionData({ usedAssets, assetsData: morphoMarketData.assetsData, marketInfo: morphoMarketData });
   return {
+    exchangeInfo: {
+      price: priceWithFee,
+      source,
+      sellAsset: borrowAsset.symbol,
+      sellAmount: debtAmount,
+      buyAsset: supplyAsset.symbol,
+      buyAmount: leveragedAmount.toString(),
+    },
     usedAssets,
     ...aggregatedPosition,
   };

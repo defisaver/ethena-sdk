@@ -7,7 +7,7 @@ import {
 const { assert } = require('chai');
 
 
-describe('Tests', () => {
+describe('Morpho', () => {
   let rpcUrl: string;
 
   before(async () => {
@@ -46,6 +46,7 @@ describe('Tests', () => {
     const selectedMarket = SupportedMarkets.MorphoBlueSUSDeUSDtb_915;
 
     const market = await marketData.getMarketData(selectedMarket, rpcUrl, network);
-    const position = await positionData.getResultingPosition(market, '100000', 4, rpcUrl, network);
+    const position = await positionData.getResultingPosition(market, '100000', 4, '0x21dC459fbA0B1Ea037Cd221D35b928Be1C26141a', rpcUrl, network);
+    console.log('Resulting position:', position);
   });
 });

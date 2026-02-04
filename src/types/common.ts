@@ -2,6 +2,7 @@ import {
   IncentiveData, MMUsedAssets, MorphoBlueAggregatedPositionData, NetworkNumber,
 } from '@defisaver/positions-sdk';
 import { SupportedMarkets } from './markets';
+import { OffchainExchanges } from './exchange';
 
 export interface AssetData {
   symbol: string;
@@ -23,8 +24,18 @@ export interface MarketData {
   rate: string;
 }
 
+export interface ExchangeInfo {
+  price: string;
+  source: OffchainExchanges | 'None';
+  sellAsset: string;
+  sellAmount: string;
+  buyAsset: string;
+  buyAmount: string;
+}
+
 export interface PositionData extends MorphoBlueAggregatedPositionData {
   usedAssets: MMUsedAssets;
+  exchangeInfo: ExchangeInfo;
 }
 
 export {

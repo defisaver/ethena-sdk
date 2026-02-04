@@ -27,6 +27,7 @@
   "dependencies": {
     "@defisaver/positions-sdk": "^2.1.57",
     "@defisaver/tokens": "^1.7.22",
+    "bn.js": "^5.1.3",
     "decimal.js": "^10.6.0",
     "viem": "^2.37.9"
   },

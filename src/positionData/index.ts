@@ -13,10 +13,10 @@ export const getMaxLeverageForSupplyAmount = (marketData: MarketData, supplyAmou
   }
 };
 
-export const getResultingPosition = async (marketData: MarketData, supplyAmount: string, leverage: number, rpcUrl: string, network: NetworkNumber): Promise<PositionData> => {
+export const getResultingPosition = async (marketData: MarketData, supplyAmount: string, leverage: number, userAddress: string, rpcUrl: string, network: NetworkNumber): Promise<PositionData> => {
   switch (marketData.market) {
     case SupportedMarkets.MorphoBlueSUSDeUSDtb_915: {
-      return getMorphoResultingPosition(marketData, supplyAmount, leverage, rpcUrl, network);
+      return getMorphoResultingPosition(marketData, supplyAmount, leverage, userAddress, rpcUrl, network);
     }
     default:
       throw new Error(`Unsupported market: ${marketData.market}`);
