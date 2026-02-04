@@ -59,3 +59,14 @@ export const SafeProxyFactory130 = {
     },
   },
 } as const;
+
+export const MorphoManager = {
+  abi: [{
+    inputs: [{ internalType: 'address', name: '', type: 'address' }], name: 'nonce', outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], stateMutability: 'view', type: 'function',
+  }],
+  networks: {
+    1: {
+      address: '0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb',
+    },
+  },
+} as const;

@@ -39,6 +39,7 @@ export const createContractFromConfigFunc = <TKey extends ConfigKey>(name: TKey,
 
 export const Safe130Contract = createContractFromConfigFunc('Safe130');
 export const SafeFactoryContract = createContractFromConfigFunc('SafeProxyFactory130');
+export const MorphoManagerContract = createContractFromConfigFunc('MorphoManager');
 
 export const getSafeWalletContract = (client: Client, address: HexString) => {
   const abi = getConfigContractAbi('Safe130') as typeof configRaw['Safe130']['abi'];
