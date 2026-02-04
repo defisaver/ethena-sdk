@@ -1,6 +1,6 @@
 {
   "name": "@defisaver/ethena-sdk",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "SDK for ethena lev create",
   "main": "./cjs/index.js",
   "module": "./esm/index.js",
