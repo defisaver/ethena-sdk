@@ -12,7 +12,7 @@
     "dev": "tsc -p tsconfig.json --watch",
     "lint": "eslint src/ --fix",
     "lint-check": "eslint src/",
-    "test": "mocha tests/*"
+    "test": "mocha tests/safe.ts"
   },
   "repository": {
     "type": "git",
@@ -26,6 +26,7 @@
   "homepage": "https://github.com/defisaver/ethena-sdk#readme",
   "dependencies": {
     "@defisaver/positions-sdk": "^2.1.57",
+    "@defisaver/sdk": "^1.3.18",
     "@defisaver/tokens": "^1.7.22",
     "bn.js": "^5.1.3",
     "decimal.js": "^10.6.0",

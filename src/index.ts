@@ -4,6 +4,7 @@ import * as positionData from './positionData';
 import * as marketData from './marketData';
 import * as exchange from './exchange';
 import * as constants from './constants';
+import * as safe from './safe';
 
 export * from './types';
 
@@ -12,4 +13,5 @@ export {
   marketData,
   exchange,
   constants,
+  safe,
 };
