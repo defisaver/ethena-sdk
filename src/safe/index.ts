@@ -97,3 +97,21 @@ export const predictSafeAddress = async (owner: string, rpcUrl: string, network:
 
   return '';
 };
+
+const urlWithParams = (urlString: string, params: Record<string, string>) => {
+  const url = new URL(urlString);
+  url.search = new URLSearchParams(params).toString();
+
+  return url.toString();
+};
+
+export const getNextNonce = async (address: string, safeAddress: string, network: NetworkNumber) => {
+  const res = await fetch(urlWithParams(`${SAFE_API_URL}/safe/nonce`, {
+    address,
+    safeAddress,
+    network: network.toString(),
+  }));
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error.message);
+  return json.data;
+};

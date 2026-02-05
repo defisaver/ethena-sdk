@@ -1,7 +1,8 @@
 import 'dotenv/config';
 
+import { MorphoBlueVersions } from '@defisaver/positions-sdk';
 import {
-  safe, NetworkNumber,
+  NetworkNumber,
   SupportedMarkets,
   execution,
 } from '../src';
@@ -19,12 +20,17 @@ describe('Execution', () => {
   it('can fetch morpho requests', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
+    const userAddress = '0x21dC459fbA0B1Ea037Cd221D35b928Be1C26141a';
 
-    const requests = execution.getRequests(SupportedMarkets.MorphoBlueSUSDeUSDtb_915);
-    console.log('Morpho requests:', requests);
-    for (const req of requests) {
-      const response = await req.getParams(rpcUrl, network, '0x21dC459fbA0B1Ea037Cd221D35b928Be1C26141a');
-      console.log(`Response for request ${req.type}:`, response);
-    }
+    const { requests: { authRequest, createAndExecuteRequest }, recipe, safeAddress } = await execution.getRequests(SupportedMarkets.MorphoBlueSUSDeUSDtb_915, userAddress, rpcUrl, network);
+
+    const response = await authRequest.getParams({
+      rpcUrl, network, userAddress, safeAddress,
+    });
+    const response2 = await createAndExecuteRequest.getParams({
+      rpcUrl, network, userAddress, safeAddress, recipeGetter: () => recipe(MorphoBlueVersions.MorphoBlueSUSDeUSDtb_915, network, '100', userAddress),
+    });
+
+    console.log('Auth request params:', response2);
   });
 });

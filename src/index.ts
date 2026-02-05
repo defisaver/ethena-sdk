@@ -6,6 +6,7 @@ import * as exchange from './exchange';
 import * as constants from './constants';
 import * as safe from './safe';
 import * as execution from './execution';
+import * as recipes from './recipes';
 
 export * from './types';
 
@@ -16,4 +17,5 @@ export {
   constants,
   safe,
   execution,
+  recipes,
 };
