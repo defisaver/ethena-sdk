@@ -35,11 +35,16 @@ export interface CreateAndExecuteAdditionaPrams extends RequestCommonParams {
   recipeGetter: () => Promise<Recipe>;
 }
 
-export interface CreateEthCallParams extends RequestCommonParams {
+export interface CreateWithSignatureEthCallParams extends RequestCommonParams {
   createSignature: any;
   createTxData: SafeTxData;
 }
 
+export interface CreateEthCallParams extends RequestCommonParams {
+  recipeGetter: () => Promise<Recipe>;
+}
+
 export type AuthRequest = Request<RequestCommonParams>;
 export type CreateAndExecuteRequest = Request<CreateAndExecuteAdditionaPrams>;
+export type CreateWithSignatureEthCallRequest = Request<CreateWithSignatureEthCallParams>;
 export type CreateEthCallRequest = Request<CreateEthCallParams>;

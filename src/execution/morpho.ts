@@ -1,12 +1,14 @@
 import { NetworkNumber } from '@defisaver/positions-sdk';
-import { encodeAbiParameters, getAbiItem } from 'viem';
-import { DFSSafeFactoryContract, getConfigContractAddress, MorphoManagerContract } from '../contracts';
+import { encodeAbiParameters, encodeFunctionData, getAbiItem } from 'viem';
+import {
+  DFSSafeFactoryContract, getConfigContractAddress, getSafeWalletContract, MorphoManagerContract,
+} from '../contracts';
 import { getViemProvider } from '../services/viem';
 import {
-  AuthRequest, CreateAndExecuteRequest, CreateEthCallRequest, RequestType, SafeTxData,
+  AuthRequest, CreateAndExecuteRequest, CreateEthCallRequest, CreateWithSignatureEthCallRequest, RequestType, SafeTxData,
 } from '../types';
 import {
-  getNextNonce, getSafeSalt, getSafeSetupParamsEncoded, predictSafeAddress,
+  getNextNonce, getSafeSalt, getSafeSetupParamsEncoded, getSafeWallets, predictSafeAddress,
 } from '../safe';
 import { morphoBlueLevCreateRecipe } from '../recipes';
 import { SAFE_REFUND_RECEIVER, ZERO_ADDRESS } from '../constants';
@@ -102,7 +104,7 @@ const createAndExecuteSignature: CreateAndExecuteRequest = {
   },
 };
 
-const createTx: CreateEthCallRequest = {
+const createAndExecuteTx: CreateWithSignatureEthCallRequest = {
   type: RequestType.EthCall,
   getParams: async ({
     rpcUrl, network, userAddress, safeAddress, createSignature, createTxData,
@@ -126,10 +128,16 @@ const createTx: CreateEthCallRequest = {
 
     const methodParams = [safeCreationParams, data];
 
-    const encodedMethod = encodeAbiParameters(
-      getAbiItem({ abi: contract.abi, name: method })?.inputs || [],
-      // @ts-ignore
-      methodParams,
+    const encodedMethod = encodeFunctionData(
+      {
+        abi: contract.abi,
+        functionName: method,
+        args: [
+          { singleton: singletonAddress, initializer: setupParamsEncoded, saltNonce: BigInt(salt) },
+          // @ts-ignore
+          { ...createTxData, signatures: createSignature },
+        ],
+      },
     );
 
     const txParams = {
@@ -144,12 +152,85 @@ const createTx: CreateEthCallRequest = {
   },
 };
 
-export const getMorphoRequests = async (userAddress: string, rpcUrl: string, network: NetworkNumber) => ({
-  requests: {
-    authRequest: morphoAuthSignature,
-    createAndExecuteRequest: createAndExecuteSignature,
-    createEthCallRequest: createTx,
+const createTx: CreateEthCallRequest = {
+  type: RequestType.EthCall,
+  getParams: async ({
+    rpcUrl, network, userAddress, safeAddress, recipeGetter,
+  }) => {
+    const provider = getViemProvider(rpcUrl, network);
+    const recipe = await recipeGetter();
+
+    const ethValue = await recipe.getEthValue();
+    const executeParams = recipe.encodeForDsProxyCall();
+
+    const preApporvedSig = {
+      id: -1,
+      signature: `0x${'0'.repeat(24)}${userAddress.substring(2)}${'0'.repeat(64)}01`,
+      signer: userAddress,
+      sigType: 'PRE_APPROVED',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const signatureV = parseInt(preApporvedSig.signature.slice(-2), 16);
+    const handledSig = preApporvedSig.signature.slice(0, -2) + signatureV.toString(16).padStart(2, '0');
+
+    const safeExecuteParams = [
+      executeParams[0], // to
+      ethValue, // eth value
+      executeParams[1], // action/recipe/contract calldata
+      1, // 1 is delegate call
+      0, // safeTxGas
+      0, // baseGas
+      0, // gasPrice
+      ZERO_ADDRESS, // gasToken
+      SAFE_REFUND_RECEIVER, // refundReceiver
+      handledSig,
+    ];
+
+    const contract = getSafeWalletContract(provider, safeAddress as `0x${string}`);
+    const encodedMethod = encodeFunctionData(
+      {
+        abi: contract.abi,
+        functionName: 'execTransaction',
+        // @ts-ignore
+        args: [...safeExecuteParams],
+      },
+    );
+
+    const txParams = {
+      from: userAddress,
+      to: safeAddress,
+      value: +ethValue,
+      data: encodedMethod,
+      gas: 0,
+    };
+
+    return txParams;
   },
-  recipe: morphoBlueLevCreateRecipe,
-  safeAddress: await predictSafeAddress(userAddress, rpcUrl, network),
-});
+};
+
+export const getMorphoRequests = async (userAddress: string, rpcUrl: string, network: NetworkNumber) => {
+//   const safeWallets = (await getSafeWallets(userAddress, network)).wallets;
+  const safeWallets: any[] = [];
+  const safeWallet = safeWallets[0] ? safeWallets[0] : await predictSafeAddress(userAddress, rpcUrl, network);
+
+  const provider = getViemProvider(rpcUrl, network);
+  const managerContract = MorphoManagerContract(provider, network);
+  const isAuthorized = await managerContract.read.isAuthorized([userAddress as `0x${string}`, safeWallet as `0x${string}`]);
+
+  const shouldCreateSafeWallet = !safeWallets[0];
+
+  return ({
+    requests: {
+      authRequest: morphoAuthSignature,
+      createAndExecuteRequest: createAndExecuteSignature,
+      createWithSignatureEthCallRequest: createAndExecuteTx,
+      createEthCallRequest: createTx,
+    },
+    recipe: morphoBlueLevCreateRecipe,
+    safeAddress: await predictSafeAddress(userAddress, rpcUrl, network),
+    isAuthorized,
+    shouldCreateSafeWallet,
+  });
+};

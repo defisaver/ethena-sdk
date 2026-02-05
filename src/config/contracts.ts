@@ -1,6 +1,8 @@
 export const Safe130 = {
   abi: [{
-    inputs: [{ internalType: 'address[]', name: '_owners', type: 'address[]' }, { internalType: 'uint256', name: '_threshold', type: 'uint256' }, { internalType: 'address', name: 'to', type: 'address' }, { internalType: 'bytes', name: 'data', type: 'bytes' }, { internalType: 'address', name: 'fallbackHandler', type: 'address' }, { internalType: 'address', name: 'paymentToken', type: 'address' }, { internalType: 'uint256', name: 'payment', type: 'uint256' }, { internalType: 'address payable', name: 'paymentReceiver', type: 'address' }], name: 'setup', outputs: [], stateMutability: 'pure', type: 'function',
+    inputs: [{ internalType: 'address', name: 'to', type: 'address' }, { internalType: 'uint256', name: 'value', type: 'uint256' }, { internalType: 'bytes', name: 'data', type: 'bytes' }, { internalType: 'enum Enum.Operation', name: 'operation', type: 'uint8' }, { internalType: 'uint256', name: 'safeTxGas', type: 'uint256' }, { internalType: 'uint256', name: 'baseGas', type: 'uint256' }, { internalType: 'uint256', name: 'gasPrice', type: 'uint256' }, { internalType: 'address', name: 'gasToken', type: 'address' }, { internalType: 'address payable', name: 'refundReceiver', type: 'address' }, { internalType: 'bytes', name: 'signatures', type: 'bytes' }], name: 'execTransaction', outputs: [{ internalType: 'bool', name: 'success', type: 'bool' }], stateMutability: 'payable', type: 'function',
+  }, {
+    inputs: [{ internalType: 'address[]', name: '_owners', type: 'address[]' }, { internalType: 'uint256', name: '_threshold', type: 'uint256' }, { internalType: 'address', name: 'to', type: 'address' }, { internalType: 'bytes', name: 'data', type: 'bytes' }, { internalType: 'address', name: 'fallbackHandler', type: 'address' }, { internalType: 'address', name: 'paymentToken', type: 'address' }, { internalType: 'uint256', name: 'payment', type: 'uint256' }, { internalType: 'address payable', name: 'paymentReceiver', type: 'address' }], name: 'setup', outputs: [], stateMutability: 'nonpayable', type: 'function',
   }],
   networks: {
     1: {
@@ -62,6 +64,8 @@ export const SafeProxyFactory130 = {
 
 export const MorphoManager = {
   abi: [{
+    inputs: [{ internalType: 'address', name: '', type: 'address' }, { internalType: 'address', name: '', type: 'address' }], name: 'isAuthorized', outputs: [{ internalType: 'bool', name: '', type: 'bool' }], stateMutability: 'view', type: 'function',
+  }, {
     inputs: [{ internalType: 'address', name: '', type: 'address' }], name: 'nonce', outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], stateMutability: 'view', type: 'function',
   }],
   networks: {
@@ -90,4 +94,74 @@ export const DFSSafeFactory = {
       address: '0x905ade25b1f8f39cf470e39c5a768eaf1f91fd3e',
     },
   },
+} as const;
+
+export const ERC20 = {
+  abi: [{
+    constant: true, inputs: [], name: 'name', outputs: [{ name: '', type: 'string' }], payable: false, stateMutability: 'view', type: 'function',
+  }, {
+    constant: false, inputs: [], name: 'stop', outputs: [], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'guy', type: 'address' }, { name: 'wad', type: 'uint256' }], name: 'approve', outputs: [{ name: '', type: 'bool' }], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'owner_', type: 'address' }], name: 'setOwner', outputs: [], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: true, inputs: [], name: 'totalSupply', outputs: [{ name: '', type: 'uint256' }], payable: false, stateMutability: 'view', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'src', type: 'address' }, { name: 'dst', type: 'address' }, { name: 'wad', type: 'uint256' }], name: 'transferFrom', outputs: [{ name: '', type: 'bool' }], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: true, inputs: [], name: 'decimals', outputs: [{ name: '', type: 'uint256' }], payable: false, stateMutability: 'view', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'guy', type: 'address' }, { name: 'wad', type: 'uint256' }], name: 'mint', outputs: [], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'wad', type: 'uint256' }], name: 'burn', outputs: [], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'name_', type: 'bytes32' }], name: 'setName', outputs: [], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: true, inputs: [{ name: 'src', type: 'address' }], name: 'balanceOf', outputs: [{ name: '', type: 'uint256' }], payable: false, stateMutability: 'view', type: 'function',
+  }, {
+    constant: true, inputs: [], name: 'stopped', outputs: [{ name: '', type: 'bool' }], payable: false, stateMutability: 'view', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'authority_', type: 'address' }], name: 'setAuthority', outputs: [], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: true, inputs: [], name: 'owner', outputs: [{ name: '', type: 'address' }], payable: false, stateMutability: 'view', type: 'function',
+  }, {
+    constant: true, inputs: [], name: 'symbol', outputs: [{ name: '', type: 'string' }], payable: false, stateMutability: 'view', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'guy', type: 'address' }, { name: 'wad', type: 'uint256' }], name: 'burn', outputs: [], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'wad', type: 'uint256' }], name: 'mint', outputs: [], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'dst', type: 'address' }, { name: 'wad', type: 'uint256' }], name: 'transfer', outputs: [{ name: '', type: 'bool' }], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'dst', type: 'address' }, { name: 'wad', type: 'uint256' }], name: 'push', outputs: [], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'src', type: 'address' }, { name: 'dst', type: 'address' }, { name: 'wad', type: 'uint256' }], name: 'move', outputs: [], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: false, inputs: [], name: 'start', outputs: [], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: true, inputs: [], name: 'authority', outputs: [{ name: '', type: 'address' }], payable: false, stateMutability: 'view', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'guy', type: 'address' }], name: 'approve', outputs: [{ name: '', type: 'bool' }], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    constant: true, inputs: [{ name: 'src', type: 'address' }, { name: 'guy', type: 'address' }], name: 'allowance', outputs: [{ name: '', type: 'uint256' }], payable: false, stateMutability: 'view', type: 'function',
+  }, {
+    constant: false, inputs: [{ name: 'src', type: 'address' }, { name: 'wad', type: 'uint256' }], name: 'pull', outputs: [], payable: false, stateMutability: 'nonpayable', type: 'function',
+  }, {
+    inputs: [{ name: 'symbol_', type: 'bytes32' }], payable: false, stateMutability: 'nonpayable', type: 'constructor',
+  }, {
+    anonymous: false, inputs: [{ indexed: true, name: 'guy', type: 'address' }, { indexed: false, name: 'wad', type: 'uint256' }], name: 'Mint', type: 'event',
+  }, {
+    anonymous: false, inputs: [{ indexed: true, name: 'guy', type: 'address' }, { indexed: false, name: 'wad', type: 'uint256' }], name: 'Burn', type: 'event',
+  }, {
+    anonymous: false, inputs: [{ indexed: true, name: 'authority', type: 'address' }], name: 'LogSetAuthority', type: 'event',
+  }, {
+    anonymous: false, inputs: [{ indexed: true, name: 'owner', type: 'address' }], name: 'LogSetOwner', type: 'event',
+  }, {
+    anonymous: true, inputs: [{ indexed: true, name: 'sig', type: 'bytes4' }, { indexed: true, name: 'guy', type: 'address' }, { indexed: true, name: 'foo', type: 'bytes32' }, { indexed: true, name: 'bar', type: 'bytes32' }, { indexed: false, name: 'wad', type: 'uint256' }, { indexed: false, name: 'fax', type: 'bytes' }], name: 'LogNote', type: 'event',
+  }, {
+    anonymous: false, inputs: [{ indexed: true, name: 'src', type: 'address' }, { indexed: true, name: 'guy', type: 'address' }, { indexed: false, name: 'wad', type: 'uint256' }], name: 'Approval', type: 'event',
+  }, {
+    anonymous: false, inputs: [{ indexed: true, name: 'src', type: 'address' }, { indexed: true, name: 'dst', type: 'address' }, { indexed: false, name: 'wad', type: 'uint256' }], name: 'Transfer', type: 'event',
+  }],
 } as const;

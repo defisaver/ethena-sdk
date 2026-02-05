@@ -51,6 +51,15 @@ export const getSafeWalletContract = (client: Client, address: HexString) => {
   });
 };
 
+export const getERC20Contract = (client: Client, address: HexString) => {
+  const abi = getConfigContractAbi('ERC20') as typeof configRaw['ERC20']['abi'];
+  return getContract({
+    address,
+    abi,
+    client,
+  });
+};
+
 export const getSafeWalletSingletonAddress = (network?: NetworkNumber) => getConfigContractAddress('Safe130', network || NetworkNumber.Eth);
 
 export const getSafeFactoryAddress = (network?: NetworkNumber) => getConfigContractAddress('SafeProxyFactory130', network || NetworkNumber.Eth);

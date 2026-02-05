@@ -1,5 +1,4 @@
 import 'dotenv/config';
-
 import {
   safe, NetworkNumber,
 } from '../src';
