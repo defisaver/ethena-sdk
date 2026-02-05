@@ -1,8 +1,13 @@
 import { NetworkNumber } from '@defisaver/positions-sdk';
-import { MorphoManagerContract } from '../contracts';
+import { encodeAbiParameters, getAbiItem } from 'viem';
+import { DFSSafeFactoryContract, getConfigContractAddress, MorphoManagerContract } from '../contracts';
 import { getViemProvider } from '../services/viem';
-import { AuthRequest, CreateAndExecuteRequest, RequestType } from '../types';
-import { getNextNonce, predictSafeAddress } from '../safe';
+import {
+  AuthRequest, CreateAndExecuteRequest, CreateEthCallRequest, RequestType, SafeTxData,
+} from '../types';
+import {
+  getNextNonce, getSafeSalt, getSafeSetupParamsEncoded, predictSafeAddress,
+} from '../safe';
 import { morphoBlueLevCreateRecipe } from '../recipes';
 import { SAFE_REFUND_RECEIVER, ZERO_ADDRESS } from '../constants';
 
@@ -55,9 +60,7 @@ const createAndExecuteSignature: CreateAndExecuteRequest = {
     const recipe = await recipeGetter();
     const executeParams = recipe.encodeForDsProxyCall()[1];
 
-    // const nonce = await getNextNonce(recipe.recipeExecutorAddress, safeAddress, network);
-
-    const safeTx = {
+    const safeTx: SafeTxData = {
       to: recipe.recipeExecutorAddress,
       value: '0',
       data: executeParams,
@@ -99,10 +102,53 @@ const createAndExecuteSignature: CreateAndExecuteRequest = {
   },
 };
 
+const createTx: CreateEthCallRequest = {
+  type: RequestType.EthCall,
+  getParams: async ({
+    rpcUrl, network, userAddress, safeAddress, createSignature, createTxData,
+  }) => {
+    const provider = getViemProvider(rpcUrl, network);
+    const contract = DFSSafeFactoryContract(provider, network);
+    const method = 'createSafeAndExecute';
+
+    const singletonAddress = getConfigContractAddress('Safe130', network);
+    const setupParamsEncoded = getSafeSetupParamsEncoded([userAddress], 1, network);
+    const salt = await getSafeSalt(userAddress, rpcUrl, network);
+
+    const safeCreationParams = [
+      singletonAddress,
+      setupParamsEncoded,
+      salt,
+    ];
+
+    const data = Object.values(createTxData);
+    data[data.length - 1] = createSignature;
+
+    const methodParams = [safeCreationParams, data];
+
+    const encodedMethod = encodeAbiParameters(
+      getAbiItem({ abi: contract.abi, name: method })?.inputs || [],
+      // @ts-ignore
+      methodParams,
+    );
+
+    const txParams = {
+      from: userAddress,
+      to: contract.address,
+      value: 0,
+      data: encodedMethod,
+      gas: 0,
+    };
+
+    return txParams;
+  },
+};
+
 export const getMorphoRequests = async (userAddress: string, rpcUrl: string, network: NetworkNumber) => ({
   requests: {
     authRequest: morphoAuthSignature,
     createAndExecuteRequest: createAndExecuteSignature,
+    createEthCallRequest: createTx,
   },
   recipe: morphoBlueLevCreateRecipe,
   safeAddress: await predictSafeAddress(userAddress, rpcUrl, network),

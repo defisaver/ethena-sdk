@@ -37,6 +37,13 @@ const getSafeSetupParams = (owners: string[], threshold: number, network: Networ
   SAFE_REFUND_RECEIVER as `0x${string}`,
 ];
 
+export const getSafeSetupParamsEncoded = (owners: string[], threshold: number, network: NetworkNumber) => encodeFunctionData({
+  abi: getConfigContractAbi('Safe130'),
+  functionName: 'setup',
+  // @ts-ignore
+  args: getSafeSetupParams(owners, threshold, network),
+});
+
 const _predictSafeAddress = async (
   rpcUrl: string,
   network: NetworkNumber,
@@ -76,13 +83,7 @@ export const predictSafeAddress = async (owner: string, rpcUrl: string, network:
 
   const threshold = 1;
   const owners = [owner];
-  const setupParams = getSafeSetupParams(owners, threshold, network);
-  const setupParamsEncoded = encodeFunctionData({
-    abi: getConfigContractAbi('Safe130'),
-    functionName: 'setup',
-    // @ts-ignore
-    args: setupParams,
-  });
+  const setupParamsEncoded = getSafeSetupParamsEncoded(owners, threshold, network);
   const oneOfOneWalletsCount = (await getSafeWallets(owner, network)).wallets.length;
   const failAfter = 10;
   for (let nonce = oneOfOneWalletsCount + 1; nonce < oneOfOneWalletsCount + failAfter + 1; nonce += 1) {
@@ -96,6 +97,33 @@ export const predictSafeAddress = async (owner: string, rpcUrl: string, network:
   }
 
   return '';
+};
+
+export const getSafeSalt = async (owner: string, rpcUrl: string, network: NetworkNumber): Promise<string> => {
+  const provider = getViemProvider(rpcUrl, network);
+
+  const threshold = 1;
+  const owners = [owner];
+  const setupParamsEncoded = getSafeSetupParamsEncoded(owners, threshold, network);
+  const oneOfOneWalletsCount = (await getSafeWallets(owner, network)).wallets.length;
+  const failAfter = 10;
+  for (let nonce = oneOfOneWalletsCount + 1; nonce < oneOfOneWalletsCount + failAfter + 1; nonce += 1) {
+    const salt = `${SALT_PREFIX}${nonce}`;
+    const predictedAddr = await _predictSafeAddress(
+      rpcUrl,
+      network,
+      setupParamsEncoded,
+      salt,
+    );
+    const bytecode = await provider.getCode({ address: predictedAddr });
+    if (!bytecode) {
+      // safe does not exist
+      return salt;
+    }
+  }
+  throw new Error(
+    'Could not determine nonce & salt for creating a smart wallet',
+  );
 };
 
 const urlWithParams = (urlString: string, params: Record<string, string>) => {

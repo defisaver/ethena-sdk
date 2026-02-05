@@ -70,3 +70,24 @@ export const MorphoManager = {
     },
   },
 } as const;
+
+export const DFSSafeFactory = {
+  abi: [{ inputs: [], stateMutability: 'nonpayable', type: 'constructor' }, { inputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], name: 'UnsupportedChain', type: 'error' }, {
+    inputs: [{
+      components: [{ internalType: 'address', name: 'singleton', type: 'address' }, { internalType: 'bytes', name: 'initializer', type: 'bytes' }, { internalType: 'uint256', name: 'saltNonce', type: 'uint256' }], internalType: 'structDFSSafeFactory.SafeCreationData', name: '_creationData', type: 'tuple',
+    }, {
+      components: [{ internalType: 'address', name: 'to', type: 'address' }, { internalType: 'uint256', name: 'value', type: 'uint256' }, { internalType: 'bytes', name: 'data', type: 'bytes' }, { internalType: 'uint8', name: 'operation', type: 'uint8' }, { internalType: 'uint256', name: 'safeTxGas', type: 'uint256' }, { internalType: 'uint256', name: 'baseGas', type: 'uint256' }, { internalType: 'uint256', name: 'gasPrice', type: 'uint256' }, { internalType: 'address', name: 'gasToken', type: 'address' }, { internalType: 'addresspayable', name: 'refundReceiver', type: 'address' }, { internalType: 'bytes', name: 'signatures', type: 'bytes' }], internalType: 'structDFSSafeFactory.SafeExecutionData', name: '_executionData', type: 'tuple',
+    }],
+    name: 'createSafeAndExecute',
+    outputs: [],
+    stateMutability: 'payable',
+    type: 'function',
+  }, {
+    inputs: [], name: 'safeFactory', outputs: [{ internalType: 'contractISafeProxyFactory', name: '', type: 'address' }], stateMutability: 'view', type: 'function',
+  }],
+  networks: {
+    1: {
+      address: '0x905ade25b1f8f39cf470e39c5a768eaf1f91fd3e',
+    },
+  },
+} as const;

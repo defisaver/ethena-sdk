@@ -11,6 +11,19 @@ export interface Request<T> {
   getParams: (params: T) => Promise<any>;
 }
 
+export interface SafeTxData {
+  to: string;
+  value: string;
+  data: string;
+  operation: number;
+  safeTxGas: number;
+  baseGas: number;
+  gasPrice: number;
+  gasToken: string;
+  refundReceiver: string;
+  nonce: number;
+}
+
 export interface RequestCommonParams {
   rpcUrl: string;
   network: NetworkNumber;
@@ -22,5 +35,11 @@ export interface CreateAndExecuteAdditionaPrams extends RequestCommonParams {
   recipeGetter: () => Promise<Recipe>;
 }
 
+export interface CreateEthCallParams extends RequestCommonParams {
+  createSignature: any;
+  createTxData: SafeTxData;
+}
+
 export type AuthRequest = Request<RequestCommonParams>;
 export type CreateAndExecuteRequest = Request<CreateAndExecuteAdditionaPrams>;
+export type CreateEthCallRequest = Request<CreateEthCallParams>;
