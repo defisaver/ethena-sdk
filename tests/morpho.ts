@@ -14,14 +14,6 @@ describe('Morpho', () => {
     rpcUrl = process.env.RPC || '';
   });
 
-  it('can fetch morpho sUSDe/USDtb market data', async function () {
-    this.timeout(10000);
-    const network = NetworkNumber.Eth;
-    const selectedMarket = SupportedMarkets.MorphoBlueSUSDeUSDtb_915;
-
-    const market = await marketData.getMarketData(selectedMarket, rpcUrl, network);
-  });
-
   it('can fetch morpho sUSDe/USDtb apy for 4x exposure', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;

@@ -2,14 +2,14 @@ import 'dotenv/config';
 
 import { MorphoBlueVersions } from '@defisaver/positions-sdk';
 import { createWalletClient, http, parseGwei } from 'viem';
-import { providers, Wallet } from 'ethers';
-import Web3 from 'web3';
 import { mainnet } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 import {
   NetworkNumber,
   SupportedMarkets,
   execution,
+  marketData,
+  positionData,
 } from '../src';
 
 const { assert } = require('chai');
@@ -25,6 +25,11 @@ describe('Execution', () => {
   it('can fetch morpho requests', async function () {
     this.timeout(100000);
     const network = NetworkNumber.Eth;
+    const selectedMarket = SupportedMarkets.MorphoBlueSUSDeUSDtb_915;
+    const supplyAmount = '10';
+    const exposure = 3;
+    const maxFeePerGas = parseGwei('20');
+    const maxPriorityFeePerGas = parseGwei('10');
     // @ts-ignore
     const account = privateKeyToAccount(process.env.PRIVATE_KEY);
     const client = createWalletClient({
@@ -33,29 +38,24 @@ describe('Execution', () => {
       transport: http(rpcUrl),
     });
     const userAddress = account.address;
-
-    // const web3 = new Web3(rpcUrl);
-    // const web3account = web3.eth.accounts.privateKeyToAccount(process.env.PRIVATE_KEY || '');
     console.log('User address:', account.address);
-
-    // const provider = new providers.JsonRpcProvider(rpcUrl);
-    // const wallet = new Wallet(process.env.PRIVATE_KEY || '', provider);
 
     const {
       requests: {
         authRequest, createAndExecuteRequest, createEthCallRequest, createWithSignatureEthCallRequest,
       }, recipe, shouldCreateSafeWallet, isAuthorized, safeAddress,
     } = await execution.getRequests(SupportedMarkets.MorphoBlueSUSDeUSDtb_915, userAddress, rpcUrl, network);
+    console.log('Safe address:', safeAddress);
 
-    const { txParams, isApproved } = await execution.getApprovalTxParams(rpcUrl, network, 'sUSDe', '100', safeAddress, userAddress);
+    const { txParams, isApproved } = await execution.getApprovalTxParams(rpcUrl, network, 'sUSDe', supplyAmount, safeAddress, userAddress);
     if (!isApproved) {
       await client.sendTransaction({
         ...txParams,
-        maxFeePerGas: parseGwei('0.1'),
-        maxPriorityFeePerGas: parseGwei('0.1'),
+        maxFeePerGas,
+        maxPriorityFeePerGas,
         chainId: mainnet.id,
         // @ts-ignore
-        gas: 1000000,
+        gas: 3000000,
       });
     }
 
@@ -73,7 +73,27 @@ describe('Execution', () => {
       nonce = authNonce;
     }
 
-    const recipeGetter = () => recipe(MorphoBlueVersions.MorphoBlueSUSDeUSDtb_915, network, '100', '20', userAddress, safeAddress, authSignature, deadline, nonce);
+    const market = await marketData.getMarketData(selectedMarket, rpcUrl, network);
+    const { flashloanInfo, exchangeInfo, usedAssets } = await positionData.getResultingPosition(market, supplyAmount, exposure, '0x21dC459fbA0B1Ea037Cd221D35b928Be1C26141a', rpcUrl, network);
+    const debtAmount = usedAssets.USDtb?.borrowed || '0';
+    console.log('Debt amount:', debtAmount);
+
+    const recipeGetter = () => recipe(
+      MorphoBlueVersions.MorphoBlueSUSDeUSDtb_915,
+      market.assetsData,
+      network,
+      supplyAmount,
+      debtAmount,
+      userAddress,
+      safeAddress,
+      exchangeInfo.price,
+      flashloanInfo.useFlashloan,
+      flashloanInfo.protocol,
+      true,
+      authSignature,
+      deadline,
+      nonce,
+    );
 
     if (shouldCreateSafeWallet) {
       const { message: executeMessage } = await createAndExecuteRequest.getParams({
@@ -86,10 +106,10 @@ describe('Execution', () => {
       });
       await client.sendTransaction({
         ...createTxParams,
-        maxFeePerGas: parseGwei('0.1'),
-        maxPriorityFeePerGas: parseGwei('0.1'),
+        maxFeePerGas,
+        maxPriorityFeePerGas,
         chainId: mainnet.id,
-        gas: 1000000,
+        gas: 3000000,
       });
     } else {
       const createTxParams = await createEthCallRequest.getParams({
@@ -97,10 +117,10 @@ describe('Execution', () => {
       });
       await client.sendTransaction({
         ...createTxParams,
-        maxFeePerGas: parseGwei('0.1'),
-        maxPriorityFeePerGas: parseGwei('0.1'),
+        maxFeePerGas,
+        maxPriorityFeePerGas,
         chainId: mainnet.id,
-        gas: 1000000,
+        gas: 3000000,
       });
     }
   });

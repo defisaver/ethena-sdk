@@ -7,6 +7,7 @@ import * as constants from './constants';
 import * as safe from './safe';
 import * as execution from './execution';
 import * as recipes from './recipes';
+import * as flashloan from './flashloan';
 
 export * from './types';
 
@@ -18,4 +19,5 @@ export {
   safe,
   execution,
   recipes,
+  flashloan,
 };

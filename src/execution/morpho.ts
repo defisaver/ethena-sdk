@@ -26,10 +26,6 @@ const morphoAuthSignature: AuthRequest = {
 
     const message = {
       types: {
-        EIP712Domain: [
-          { name: 'verifyingContract', type: 'address' },
-          { name: 'chainId', type: 'uint256' },
-        ],
         Authorization: [
           { name: 'authorizer', type: 'address' },
           { name: 'authorized', type: 'address' },

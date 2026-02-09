@@ -35,6 +35,8 @@ const formatAssetsData = (assetsData: Record<string, any>): Record<string, Asset
       supplyIncentives: assetData.supplyIncentives,
       borrowIncentives: assetData.borrowIncentives,
       isDebtAsset: assetData.canBeBorrowed,
+      totalBorrow: assetData.totalBorrow,
+      totalSupply: assetData.totalSupply,
     };
   });
   return formattedData;

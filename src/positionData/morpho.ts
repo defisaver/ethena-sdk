@@ -3,9 +3,12 @@ import { assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
 import {
   helpers, markets, MMUsedAssets, morphoBlue, MorphoBlueVersions, NetworkNumber,
 } from '@defisaver/positions-sdk';
-import { AssetData, MarketData, PositionData } from '../types';
+import {
+  AssetData, FlashloanSource, MarketData, PositionData,
+} from '../types';
 import { getViemProvider } from '../services/viem';
 import { getBestPrice } from '../exchange';
+import { flProtocolAndFeeFor } from '../flashloan';
 
 const getMaxBoostUsd = (lltv: string, borrowLimit: string, debt: string, targetRatio = 1.01, bufferPercent = 1) => new Dec(targetRatio).mul(debt).sub(borrowLimit)
   .div(new Dec(lltv).sub(targetRatio).toString())
@@ -44,16 +47,22 @@ export const getMorphoResultingPosition = async (marketData: MarketData, supplyA
 
   const morphoMarket = markets.MorphoBlueMarkets(network)[MorphoBlueVersions.MorphoBlueSUSDeUSDtb_915];
   const {
-    rate: oracle, assetsData,
+    rate: oracle, assetsData, lltv,
   } = marketData;
   const supplyAsset: AssetData = Object.values(assetsData).find((asset) => !asset.isDebtAsset)!;
   const borrowAsset: AssetData = Object.values(assetsData).find((asset) => asset.isDebtAsset)!;
   const debtAmount = new Dec(leverage)
     .times(supplyAmount).minus(supplyAmount).times(oracle)
     .toString();
+  const suppliedInDebtAsset = new Dec(supplyAmount).times(oracle).toString();
+  const borrowLimit = new Dec(suppliedInDebtAsset).mul(lltv).toString();
+  const useFlashloan = new Dec(borrowLimit).lte(debtAmount);
 
   const debtAmountWei = assetAmountInWei(debtAmount, borrowAsset.symbol);
-  const { priceWithFee, source } = await getBestPrice(borrowAsset.symbol, supplyAsset.symbol, debtAmountWei, userAddress, network);
+  const [{ priceWithFee, source }, { protocol: flProtocol, feeMultiplier, flFee }] = await Promise.all([
+    getBestPrice(borrowAsset.symbol, supplyAsset.symbol, debtAmountWei, userAddress, network),
+    useFlashloan ? flProtocolAndFeeFor(debtAmount, borrowAsset.symbol, network, provider) : Promise.resolve({ protocol: FlashloanSource.NONE, feeMultiplier: '1', flFee: '0' }),
+  ]);
 
   const leveragedAmount = new Dec(debtAmount).times(priceWithFee);
   const collIncrease = new Dec(supplyAmount).plus(leveragedAmount).toString();
@@ -85,6 +94,12 @@ export const getMorphoResultingPosition = async (marketData: MarketData, supplyA
 
   const aggregatedPosition = helpers.morphoBlueHelpers.getMorphoBlueAggregatedPositionData({ usedAssets, assetsData: morphoMarketData.assetsData, marketInfo: morphoMarketData });
   return {
+    flashloanInfo: {
+      protocol: flProtocol,
+      useFlashloan,
+      feeMultiplier,
+      flFee,
+    },
     exchangeInfo: {
       price: priceWithFee,
       source,

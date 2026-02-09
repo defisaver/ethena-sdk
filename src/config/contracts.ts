@@ -165,3 +165,35 @@ export const ERC20 = {
     anonymous: false, inputs: [{ indexed: true, name: 'src', type: 'address' }, { indexed: true, name: 'dst', type: 'address' }, { indexed: false, name: 'wad', type: 'uint256' }], name: 'Transfer', type: 'event',
   }],
 } as const;
+
+export const AaveV3View = {
+  abi: [{
+    inputs: [{ internalType: 'address', name: '_market', type: 'address' }, { internalType: 'address[]', name: '_tokenAddresses', type: 'address[]' }],
+    name: 'getFullTokensInfo',
+    outputs: [{
+      components: [{ internalType: 'address', name: 'aTokenAddress', type: 'address' }, { internalType: 'address', name: 'underlyingTokenAddress', type: 'address' }, { internalType: 'uint16', name: 'assetId', type: 'uint16' }, { internalType: 'uint256', name: 'supplyRate', type: 'uint256' }, { internalType: 'uint256', name: 'borrowRateVariable', type: 'uint256' }, { internalType: 'uint256', name: 'borrowRateStable', type: 'uint256' }, { internalType: 'uint256', name: 'totalSupply', type: 'uint256' }, { internalType: 'uint256', name: 'availableLiquidity', type: 'uint256' }, { internalType: 'uint256', name: 'totalBorrow', type: 'uint256' }, { internalType: 'uint256', name: 'totalBorrowVar', type: 'uint256' }, { internalType: 'uint256', name: 'totalBorrowStab', type: 'uint256' }, { internalType: 'uint256', name: 'collateralFactor', type: 'uint256' }, { internalType: 'uint256', name: 'liquidationRatio', type: 'uint256' }, { internalType: 'uint256', name: 'price', type: 'uint256' }, { internalType: 'uint256', name: 'supplyCap', type: 'uint256' }, { internalType: 'uint256', name: 'borrowCap', type: 'uint256' }, { internalType: 'uint256', name: 'emodeCategory', type: 'uint256' }, { internalType: 'uint256', name: 'debtCeilingForIsolationMode', type: 'uint256' }, { internalType: 'uint256', name: 'isolationModeTotalDebt', type: 'uint256' }, { internalType: 'bool', name: 'usageAsCollateralEnabled', type: 'bool' }, { internalType: 'bool', name: 'borrowingEnabled', type: 'bool' }, { internalType: 'bool', name: 'stableBorrowRateEnabled', type: 'bool' }, { internalType: 'bool', name: 'isolationModeBorrowingEnabled', type: 'bool' }, { internalType: 'bool', name: 'isSiloedForBorrowing', type: 'bool' }, { internalType: 'uint256', name: 'eModeCollateralFactor', type: 'uint256' }, { internalType: 'bool', name: 'isFlashLoanEnabled', type: 'bool' }, { internalType: 'uint16', name: 'ltv', type: 'uint16' }, { internalType: 'uint16', name: 'liquidationThreshold', type: 'uint16' }, { internalType: 'uint16', name: 'liquidationBonus', type: 'uint16' }, { internalType: 'address', name: 'priceSource', type: 'address' }, { internalType: 'string', name: 'label', type: 'string' }, { internalType: 'bool', name: 'isActive', type: 'bool' }, { internalType: 'bool', name: 'isPaused', type: 'bool' }, { internalType: 'bool', name: 'isFrozen', type: 'bool' }], internalType: 'struct AaveV3View.TokenInfoFull[]', name: 'tokens', type: 'tuple[]',
+    }],
+    stateMutability: 'view',
+    type: 'function',
+  }],
+  networks: {
+    1: {
+      address: '0xB63565026194672f1db42473CB470B570bba78ce',
+    },
+    10: {
+      address: '0xB67979842Ec9B462e18834Aee7426ef37938A5Dd',
+    },
+    8453: {
+      address: '0x723eE7B9D3Fc685Ebac5Ec87F4E5E20513DF975F',
+    },
+    42161: {
+      address: '0xf9d70D3280794ffA1E1ffbFC8FAA600a2DFc1f52',
+    },
+    59144: {
+      address: '0x1420f4977E7B71AFddccBFc6F6e1505CefdF99F0',
+    },
+    9745: {
+      address: '0x5B0B7E38C2a8e46CfAe13c360BC5927570BeEe94',
+    },
+  },
+} as const;

@@ -1,4 +1,5 @@
 import Dec from 'decimal.js';
+import dfs from '@defisaver/sdk';
 import BN from 'bn.js';
 import { NetworkNumber } from '@defisaver/positions-sdk';
 import { assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
@@ -192,4 +193,20 @@ export const getExchangeOrder = async (fromAsset: string, toAsset: string, amoun
     source,
     price,
   };
+};
+
+export const getSellAction = async (
+  fromAsset: string,
+  toAsset: string,
+  amount: string,
+  userAddress: string,
+  minPrice: string,
+  fromAddress: string,
+  toAddress: string,
+  network: NetworkNumber = NetworkNumber.Eth,
+) => {
+  const {
+    orderData, value,
+  } = await getExchangeOrder(fromAsset, toAsset, amount, userAddress, minPrice, network);
+  return new dfs.actions.basic.SellAction(orderData, fromAddress, toAddress, value);
 };

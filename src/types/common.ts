@@ -3,6 +3,7 @@ import {
 } from '@defisaver/positions-sdk';
 import { SupportedMarkets } from './markets';
 import { OffchainExchanges } from './exchange';
+import { FlashloanSource } from './flashloan';
 
 export interface AssetData {
   symbol: string;
@@ -12,6 +13,8 @@ export interface AssetData {
   supplyIncentives: IncentiveData[];
   borrowIncentives: IncentiveData[];
   isDebtAsset: boolean;
+  totalSupply?: string;
+  totalBorrow?: string;
 }
 
 export interface MarketData {
@@ -33,9 +36,17 @@ export interface ExchangeInfo {
   buyAmount: string;
 }
 
+export interface FlashloanInfo {
+  protocol: FlashloanSource;
+  useFlashloan: boolean;
+  feeMultiplier: string;
+  flFee: string;
+}
+
 export interface PositionData extends MorphoBlueAggregatedPositionData {
   usedAssets: MMUsedAssets;
   exchangeInfo: ExchangeInfo;
+  flashloanInfo: FlashloanInfo;
 }
 
 export {
