@@ -78,10 +78,6 @@ const createAndExecuteSignature: CreateAndExecuteRequest = {
 
     const message = {
       types: {
-        EIP712Domain: [
-          { name: 'verifyingContract', type: 'address' },
-          { name: 'chainId', type: 'uint256' },
-        ],
         SafeTx: [
           { type: 'address', name: 'to' },
           { type: 'uint256', name: 'value' },
