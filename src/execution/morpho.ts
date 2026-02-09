@@ -24,7 +24,7 @@ const morphoAuthSignature: AuthRequest = {
     const tenMinutes = 1000 * 60 * 10;
     const deadline = Date.now() + tenMinutes;
 
-    return {
+    const message = {
       types: {
         EIP712Domain: [
           { name: 'verifyingContract', type: 'address' },
@@ -51,6 +51,11 @@ const morphoAuthSignature: AuthRequest = {
         deadline,
       },
     };
+    return {
+      message,
+      deadline,
+      nonce,
+    };
   },
 };
 
@@ -75,7 +80,7 @@ const createAndExecuteSignature: CreateAndExecuteRequest = {
       nonce: 0,
     };
 
-    return {
+    const message = {
       types: {
         EIP712Domain: [
           { name: 'verifyingContract', type: 'address' },
@@ -100,6 +105,12 @@ const createAndExecuteSignature: CreateAndExecuteRequest = {
       },
       primaryType: 'SafeTx',
       message: safeTx,
+    };
+
+    return {
+      message,
+      deadline: 0,
+      nonce: 0,
     };
   },
 };
@@ -211,8 +222,7 @@ const createTx: CreateEthCallRequest = {
 };
 
 export const getMorphoRequests = async (userAddress: string, rpcUrl: string, network: NetworkNumber) => {
-//   const safeWallets = (await getSafeWallets(userAddress, network)).wallets;
-  const safeWallets: any[] = [];
+  const safeWallets = (await getSafeWallets(userAddress, network)).wallets;
   const safeWallet = safeWallets[0] ? safeWallets[0] : await predictSafeAddress(userAddress, rpcUrl, network);
 
   const provider = getViemProvider(rpcUrl, network);
@@ -229,7 +239,7 @@ export const getMorphoRequests = async (userAddress: string, rpcUrl: string, net
       createEthCallRequest: createTx,
     },
     recipe: morphoBlueLevCreateRecipe,
-    safeAddress: await predictSafeAddress(userAddress, rpcUrl, network),
+    safeAddress: safeWallet,
     isAuthorized,
     shouldCreateSafeWallet,
   });

@@ -1,3 +1,4 @@
+import Dec from 'decimal.js';
 import { assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
 import { encodeFunctionData } from 'viem';
 import { getERC20Contract } from '../contracts';
@@ -21,6 +22,9 @@ export const getApprovalTxParams = async (rpcUrl: string, network: NetworkNumber
   const amountWei = assetAmountInWei(amount, asset);
   const erc20 = getERC20Contract(provider, assetAddress as `0x${string}`);
 
+  const allowanceWei = await erc20.read.allowance([userAddress as `0x${string}`, spender as `0x${string}`]);
+  const isApproved = Dec(allowanceWei.toString()).gte(amountWei);
+
   const encodedMethod = encodeFunctionData(
     {
       abi: erc20.abi,
@@ -38,5 +42,5 @@ export const getApprovalTxParams = async (rpcUrl: string, network: NetworkNumber
     gas: 0,
   };
 
-  return txParams;
+  return { txParams, isApproved };
 };
