@@ -1,0 +1,1 @@
+export const addToObjectIf = (condition: boolean, item: any) => (condition ? item : {});

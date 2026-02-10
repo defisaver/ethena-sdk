@@ -1,5 +1,5 @@
 import Dec from 'decimal.js';
-import { assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
+import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
 import {
   helpers, markets, MMUsedAssets, morphoBlue, MorphoBlueVersions, NetworkNumber,
 } from '@defisaver/positions-sdk';
@@ -9,6 +9,7 @@ import {
 import { getViemProvider } from '../services/viem';
 import { getBestPrice } from '../exchange';
 import { flProtocolAndFeeFor } from '../flashloan';
+import { addToObjectIf } from '../services/utils';
 
 const getMaxBoostUsd = (lltv: string, borrowLimit: string, debt: string, targetRatio = 1.01, bufferPercent = 1) => new Dec(targetRatio).mul(debt).sub(borrowLimit)
   .div(new Dec(lltv).sub(targetRatio).toString())
@@ -30,7 +31,6 @@ const getMorphoMaxLeverageBorrow = (marketData: MarketData, supplyAmount: string
 };
 
 export const getMorphoMaxLeverageForSupplyAmount = (marketData: MarketData, supplyAmount: string) => {
-  // TODO: implement FL logic
   const feeMultiplier = 1;
 
   const maxDebt = new Dec(getMorphoMaxLeverageBorrow(marketData, supplyAmount)).div(feeMultiplier).toString();
@@ -59,15 +59,27 @@ export const getMorphoResultingPosition = async (marketData: MarketData, supplyA
   const useFlashloan = new Dec(borrowLimit).lte(debtAmount);
 
   const debtAmountWei = assetAmountInWei(debtAmount, borrowAsset.symbol);
-  const [{ priceWithFee, source }, { protocol: flProtocol, feeMultiplier, flFee }] = await Promise.all([
+  const [
+    { priceWithFee, source },
+    { protocol: flProtocol, feeMultiplier, flFee },
+    { reallocatableLiquidity, targetBorrowUtilization },
+    morphoMarketData,
+  ] = await Promise.all([
     getBestPrice(borrowAsset.symbol, supplyAsset.symbol, debtAmountWei, userAddress, network),
     useFlashloan ? flProtocolAndFeeFor(debtAmount, borrowAsset.symbol, network, provider) : Promise.resolve({ protocol: FlashloanSource.NONE, feeMultiplier: '1', flFee: '0' }),
+    helpers.morphoBlueHelpers.getReallocatableLiquidity(morphoMarket.marketId, network),
+    morphoBlue._getMorphoBlueMarketData(provider, network, morphoMarket),
   ]);
+
+  const { totalSupply, totalBorrow } = morphoMarketData.assetsData[borrowAsset.symbol];
+  const totalSupplyInWei = assetAmountInWei(totalSupply || '0', borrowAsset.symbol);
+  const totalBorrowInWei = assetAmountInWei(totalBorrow || '0', borrowAsset.symbol);
+  const liquidityToAllocateInWei = helpers.morphoBlueHelpers.getLiquidityToAllocate(debtAmountWei, totalBorrowInWei, totalSupplyInWei, targetBorrowUtilization, reallocatableLiquidity);
+  const liquidityToAllocate = assetAmountInEth(liquidityToAllocateInWei, borrowAsset.symbol);
 
   const leveragedAmount = new Dec(debtAmount).times(priceWithFee);
   const collIncrease = new Dec(supplyAmount).plus(leveragedAmount).toString();
 
-  const morphoMarketData = await morphoBlue._getMorphoBlueMarketData(provider, network, morphoMarket);
   const usedAssets: MMUsedAssets = {};
 
   usedAssets[borrowAsset.symbol] = {
@@ -92,7 +104,45 @@ export const getMorphoResultingPosition = async (marketData: MarketData, supplyA
     borrowedUsd: '0',
   };
 
-  const aggregatedPosition = helpers.morphoBlueHelpers.getMorphoBlueAggregatedPositionData({ usedAssets, assetsData: morphoMarketData.assetsData, marketInfo: morphoMarketData });
+  let borrowRate;
+  let supplyRate;
+
+  try {
+    const actions = [
+      {
+        action: 'borrow',
+        amount: debtAmount,
+        asset: borrowAsset.symbol,
+      },
+      {
+        action: 'collateral',
+        amount: liquidityToAllocate,
+        asset: borrowAsset.symbol,
+      },
+    ];
+    const { borrowRate: _borrowRate, supplyRate: _supplyRate } = await helpers.morphoBlueHelpers.getApyAfterValuesEstimation(
+      morphoMarket,
+      actions,
+      provider,
+      network,
+    );
+    borrowRate = _borrowRate;
+    supplyRate = _supplyRate;
+  } catch (e) {
+    console.error('Error getting APY after values estimation', e);
+  }
+
+  const afterAssetsData = {
+    ...morphoMarketData.assetsData,
+    [borrowAsset.symbol]: {
+      ...morphoMarketData.assetsData[borrowAsset.symbol],
+      totalBorrow: new Dec(morphoMarketData.assetsData[borrowAsset.symbol].totalBorrow || '0').add(debtAmount).toString(),
+      ...addToObjectIf(!!supplyRate, { supplyRate }),
+      ...addToObjectIf(!!borrowRate, { borrowRate }),
+    },
+  };
+
+  const aggregatedPosition = helpers.morphoBlueHelpers.getMorphoBlueAggregatedPositionData({ usedAssets, assetsData: afterAssetsData, marketInfo: morphoMarketData });
   return {
     flashloanInfo: {
       protocol: flProtocol,
